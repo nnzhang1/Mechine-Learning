@@ -95,3 +95,209 @@ import numpy as np
 X = np.arange(6).reshape(3,2)
 poly =  PolynomialFeatures(degree=2)
 poly.fit_transform(X)
+
+
+#1.5 stochastic gradient descent
+from sklearn.linear_model import SGDClassifier
+X = [[0,0],[1,1]]
+y = [0,1]
+clf = SGDClassifier(loss='hinge',penalty='l2')
+clf.fit(X,y)
+clf.predict([[2,2]])
+clf.coef_
+clf.intercept_
+clf.decision_function([[2,2]])
+
+########################################################
+#1.6Nearest Neighbors
+from sklearn.neighbors import NearestNeighbors
+import numpy as np
+X = np.array([[-1,-1],[-2,-1],[-3,-2],[1,1],[2,1],[3,2]])
+nbrs = NearestNeighbors(n_neighbors=2,algorithm='ball_tree').fit(X)
+distances, indices = nbrs.kneighbors(X)
+nbrs.kneighbors_graph(X).toarray()
+#######################################################
+#1.9朴素贝叶斯
+from sklearn import datasets
+iris = datasets.load_iris()
+from sklearn.naive_bayes import GussianNB
+gnb = GussianNB()
+y_pred = gnb.fit(iris.data, iris.target).predict(iris.data)
+####################################################
+#1.10决策树
+#分类
+from sklearn import tree
+X = [[0, 0], [1, 1]]
+Y = [0, 1]
+clf = tree.DecisionTreeClassifier()
+clf = clf.fit(X, Y)
+clf.predict([[2., 2.]])
+clf.predict_proba([[2., 2.]])
+
+from sklearn.datasets import load_iris
+from sklearn import tree
+iris = load_iris()
+clf = tree.DecisionTreeClassifier()
+clf = clf.fit(iris.data, iris.target)
+
+import graphviz 
+dot_data = tree.export_graphviz(clf, out_file=None) 
+graph = graphviz.Source(dot_data) 
+graph.render("iris")
+
+dot_data = tree.export_graphviz(clf, out_file=None, 
+                         feature_names=iris.feature_names,  
+                         class_names=iris.target_names,  
+                         filled=True, rounded=True,  
+                         special_characters=True)  
+graph = graphviz.Source(dot_data)  
+graph 
+#回归
+from sklearn import tree
+X = [[0, 0], [2, 2]]
+y = [0.5, 2.5]
+clf = tree.DecisionTreeRegressor()
+clf = clf.fit(X, y)
+clf.predict([[1, 1]])
+###########################################################
+#1.11集成方法
+#bagging,随机森林；Adaboost,GBDT
+from sklearn.ensemble import BaggingClassifier
+from sklearn.neighbors import KNeighborsClassifier
+bagging = BaggingClassifier(KNeighborsClassifier(),max_samples=0.5, max_features=0.5)
+
+
+from sklearn.ensemble import RandomForestClassifier
+X = [[0, 0], [1, 1]]
+Y = [0, 1]
+clf = RandomForestClassifier(n_estimators=10)
+clf = clf.fit(X, Y)
+#随机森林
+from sklearn.model_selection import cross_val_score
+from sklearn.datasets import make_blobs
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.tree import DecisionTreeClassifier
+X, y = make_blobs(n_samples=10000, n_features=10, centers=100,
+...     random_state=0)
+
+clf = DecisionTreeClassifier(max_depth=None, min_samples_split=2,
+...     random_state=0)
+scores = cross_val_score(clf, X, y)
+scores.mean()                             
+0.97...
+
+clf = RandomForestClassifier(n_estimators=10, max_depth=None,
+...     min_samples_split=2, random_state=0)
+scores = cross_val_score(clf, X, y)
+scores.mean()                             
+0.999...
+
+clf = ExtraTreesClassifier(n_estimators=10, max_depth=None,
+...     min_samples_split=2, random_state=0)
+scores = cross_val_score(clf, X, y)
+scores.mean() > 0.999
+
+#Adaboost
+from sklearn.model_selection import cross_val_score
+from sklearn.datasets import load_iris
+from sklearn.ensemble import AdaBoostClassifier
+
+iris = load_iris()
+clf = AdaBoostClassifier(n_estimators=100)
+scores = cross_val_score(clf, iris.data, iris.target)
+scores.mean()   
+#GBDT
+#分类
+from sklearn.datasets import make_hastie_10_2
+from sklearn.ensemble import GradientBoostingClassifier
+
+X, y = make_hastie_10_2(random_state=0)
+X_train, X_test = X[:2000], X[2000:]
+y_train, y_test = y[:2000], y[2000:]
+
+clf = GradientBoostingClassifier(n_estimators=100, learning_rate=1.0,
+...     max_depth=1, random_state=0).fit(X_train, y_train)
+clf.score(X_test, y_test)
+#回归
+import numpy as np
+from sklearn.metrics import mean_squared_error
+from sklearn.datasets import make_friedman1
+from sklearn.ensemble import GradientBoostingRegressor
+
+X, y = make_friedman1(n_samples=1200, random_state=0, noise=1.0)
+X_train, X_test = X[:200], X[200:]
+y_train, y_test = y[:200], y[200:]
+est = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1,
+...     max_depth=1, random_state=0, loss='ls').fit(X_train, y_train)
+mean_squared_error(y_test, est.predict(X_test)) 
+#GBDT特征重要性
+from sklearn.datasets import make_hastie_10_2
+from sklearn.ensemble import GradientBoostingClassifier
+
+X, y = make_hastie_10_2(random_state=0)
+clf = GradientBoostingClassifier(n_estimators=100, learning_rate=1.0,
+...     max_depth=1, random_state=0).fit(X, y)
+clf.feature_importances_
+
+#############################################################
+#1.13特征选择
+#1.13。1 去除低方差的特征
+from sklearn.feature_selection import VarianceThreshold
+X = [[0, 0, 1], [0, 1, 0], [1, 0, 0], [0, 1, 1], [0, 1, 0], [0, 1, 1]]
+sel = VarianceThreshold(threshold=(.8 * (1 - .8)))
+sel.fit_transform(X)
+#1.13.2多元特征选择
+from sklearn.datasets import load_iris
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import chi2
+iris = load_iris()
+X, y = iris.data, iris.target
+X.shape
+X_new = SelectKBest(chi2, k=2).fit_transform(X, y)
+X_new.shape
+#1.13.4。1 L1-基特征选择
+from sklearn.svm import LinearSVC
+from sklearn.datasets import load_iris
+from sklearn.feature_selection import SelectFromModel
+iris = load_iris()
+X, y = iris.data, iris.target
+X.shape
+lsvc = LinearSVC(C=0.01, penalty="l1", dual=False).fit(X, y)
+model = SelectFromModel(lsvc, prefit=True)
+X_new = model.transform(X)
+X_new.shape
+#1.13.4.2树-基特征选择
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.datasets import load_iris
+from sklearn.feature_selection import SelectFromModel
+iris = load_iris()
+X, y = iris.data, iris.target
+X.shape
+clf = ExtraTreesClassifier()
+clf = clf.fit(X, y)
+clf.feature_importances_  
+model = SelectFromModel(clf, prefit=True)
+X_new = model.transform(X)
+X_new.shape
+############################################################
+#1.17神经网络模型（监督）
+#1.17.1多层感知机
+#分类
+from sklearn.neural_network import MLPClassifier
+X = [[0., 0.], [1., 1.]]
+y = [0, 1]
+clf = MLPClassifier(solver='lbfgs', alpha=1e-5,
+...                     hidden_layer_sizes=(5, 2), random_state=1)
+...
+clf.fit(X, y)                         
+MLPClassifier(activation='relu', alpha=1e-05, batch_size='auto',
+       beta_1=0.9, beta_2=0.999, early_stopping=False,
+       epsilon=1e-08, hidden_layer_sizes=(5, 2), learning_rate='constant',
+       learning_rate_init=0.001, max_iter=200, momentum=0.9,
+       nesterovs_momentum=True, power_t=0.5, random_state=1, shuffle=True,
+       solver='lbfgs', tol=0.0001, validation_fraction=0.1, verbose=False,
+       warm_start=False)
+clf.predict([[2., 2.], [-1., -2.]])
+[coef.shape for coef in clf.coefs_]
+clf.predict_proba([[2., 2.], [1., 2.]]) 
